@@ -78,7 +78,6 @@
   .danger { color: #9b3030; background: #fff0f0; }
   .note { color: var(--muted); font-size: .82rem; line-height: 1.5; margin: 14px 2px 0; }
   @media (max-width: 650px) {
-    body { background: #f5f7fa; }
     .header-inner, main { width: min(100% - 22px, 1000px); }
     header { padding: 22px 0 24px; }
     main { padding-top: 16px; }
@@ -91,11 +90,23 @@
     #budgetInput { width: 130px; }
   }
 </style>
+<style id="premium-refresh">
+:root{--blue:#2463eb;--ink:#172033;--muted:#7b8496;--line:#e6eaf1;--surface:rgba(255,255,255,.94);--page:#f4f6fb;--green:#13845b;--red:#c53b43}
+*{box-sizing:border-box}body{background:radial-gradient(ellipse at 12% 0%,#e5edff 0,transparent 38%),var(--page);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
+header{background:linear-gradient(125deg,#10254c,#245fd7 75%,#4a83f5);box-shadow:0 12px 35px #173d6a24}h1{letter-spacing:-.045em;font-weight:800}
+.metric,.panel{background:var(--surface);backdrop-filter:blur(18px);border:1px solid #fff;box-shadow:0 16px 42px rgba(24,39,75,.075)}.metric{border-radius:20px}.panel{border-radius:23px}
+th{background:#f6f8fc;color:#758197}th,td{border-bottom:1px solid var(--line)}input[type=number],input[type=text]{border:1px solid var(--line);border-radius:11px;padding:10px 11px}input:focus{outline:3px solid #2463eb20;border-color:#76a0f5}
+.expense-type{background:#edf3ff;color:#2455ad}.bottom{background:#fbfcff;border-top:1px solid var(--line)}button{border-radius:12px;transition:transform .15s,filter .15s}button:active{transform:scale(.97)}.primary{background:linear-gradient(135deg,#3478ff,#2054d4);box-shadow:0 7px 16px #2463eb30}.secondary{background:#edf3ff;color:#2458b6}
+.theme-toggle{position:absolute;right:max(16px,calc((100vw - 1000px)/2));top:24px;width:42px;height:42px;padding:0;border:1px solid #ffffff55;border-radius:50%;background:#ffffff18;color:white;font-size:19px}
+body.dark{color-scheme:dark;--ink:#eef3ff;--muted:#9eabc0;--line:#2b3850;--surface:rgba(24,33,51,.96);--page:#0c1220;background:radial-gradient(ellipse at 12% 0%,#1b2e52 0,transparent 40%),var(--page);color:var(--ink)}body.dark .metric,body.dark .panel{border-color:#2b3850}body.dark input[type=number],body.dark input[type=text]{background:#172136;color:#eef3ff;border-color:#34435d}body.dark th,body.dark .bottom{background:#172136}body.dark tbody tr:hover,body.dark .paid-row{background:#1c2a43}body.dark .paid-row td:last-child input{background:#202e47}body.dark .secondary{background:#23385d;color:#cbdcff}
+@media(max-width:650px){.theme-toggle{top:18px;right:12px;width:38px;height:38px}.metric{border-radius:17px}.panel{border-radius:19px}}
+</style>
 </head>
 <body>
 <header>
   <div class="header-inner">
     <div class="eyebrow">Personal finance planner</div>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle dark mode">◐</button>
     <h1>Budget Assessment</h1>
     <p>Track expenses, select what to count, and see your remaining balance live.</p>
   </div>
@@ -160,18 +171,9 @@
     { name: "EMI", amount: 7111, checked: false, type: "FIXED" },
     { name: "Moneyview EMI", amount: 1756, checked: false, type: "FIXED" }
   ];
-  const savedState = (() => {
-    try { return JSON.parse(localStorage.getItem("budgetAssessmentState") || "null"); }
-    catch (_) { return null; }
-  })();
-  let expenses = Array.isArray(savedState?.expenses)
-    ? savedState.expenses
-    : initialExpenses.map(item => ({ ...item }));
+  let expenses = initialExpenses.map(item => ({ ...item }));
   const rows = document.getElementById("expenseRows");
   const budgetInput = document.getElementById("budgetInput");
-  if (savedState && Number.isFinite(Number(savedState.budget))) {
-    budgetInput.value = Math.max(0, Number(savedState.budget));
-  }
   const money = value => "₹" + Math.round(value).toLocaleString("en-IN");
   const safeAmount = value => Math.max(0, Number(value) || 0);
 
@@ -228,11 +230,6 @@
     document.getElementById("selectedCount").textContent = selected.length;
     document.getElementById("deductedTotal").textContent = money(total);
     [...rows.rows].forEach((row, i) => row.classList.toggle("paid-row", !!expenses[i]?.checked));
-    try {
-      localStorage.setItem("budgetAssessmentState", JSON.stringify({
-        budget, expenses
-      }));
-    } catch (_) {}
   }
   budgetInput.addEventListener("input", update);
   document.getElementById("selectAll").addEventListener("click", () => { expenses.forEach(e => e.checked = true); renderRows(); });
@@ -245,6 +242,11 @@
     inputs[inputs.length - 1]?.select();
   });
   renderRows();
+  const themeToggle = document.getElementById("themeToggle");
+  themeToggle.addEventListener("click", () => {
+    document.body.classList.toggle("dark");
+    themeToggle.textContent = document.body.classList.contains("dark") ? "☀" : "◐";
+  });
 })();
 </script>
 </body>
